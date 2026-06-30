@@ -147,6 +147,11 @@ def process_pair_year(market, pair, year):
     
     final_csv_path = os.path.join(pair_dir, f"{pair}_tick_UTC+0_00_{year}-Parse.csv")
     
+    # Check if final merged file already exists
+    if os.path.exists(final_csv_path):
+        print(f"  Year {year} already fully downloaded and merged. Skipping.", flush=True)
+        return True
+        
     # Get month ranges to download
     months = get_months_for_year(year)
     
