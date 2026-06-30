@@ -1,0 +1,21 @@
+# Data folders containing raw tick data
+AUDUSD/
+EURUSD/
+GBPUSD/
+NZDUSD/
+USDCAD/
+USDCHF/
+USDJPY/
+
+# Data outputs & logs
+*.csv
+*.log
+
+# Python cache
+__pycache__/
+*.pyc
+
+# IDEs and local configurations
+.vscode/
+.idea/
+.codeboarding/
