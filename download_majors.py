@@ -5,6 +5,12 @@ import glob
 from datetime import datetime
 import pandas as pd
 from findatapy.market import Market, MarketDataRequest
+from findatapy.util.dataconstants import DataConstants
+
+# Avoid Dukascopy 503 rate-limiting and connection blocks by disabling multithreading and increasing timeout
+DataConstants.dukascopy_multithreading = False
+DataConstants.dukascopy_mini_timeout_seconds = 30
+
 
 DATA_ROOT = r"C:\projecten\forexdata"
 
@@ -204,7 +210,7 @@ def main():
             pairs = custom_pairs
             print(f"Custom pairs filtered: {pairs}")
             
-    print("Initializing findatapy Market...", flush=True)
+    print("Initializing findatapy Market (single-threaded for Dukascopy stability)...", flush=True)
     market = Market(market_data_generator=None)
     
     overall_start = time.time()
