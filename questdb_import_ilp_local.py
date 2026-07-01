@@ -122,7 +122,9 @@ def main():
         print(f"[ERROR] Kan QuestDB niet bereiken: {e}")
         sys.exit(1)
 
-    csv_files = sorted(glob.glob(os.path.join(CSV_DIR, f"{pair}_tick_UTC+0_00_*-Parse.csv")))
+    # ".csv*" matcht ook ".csv.gz" (compress_existing_data.py); pandas.read_csv
+    # detecteert gzip-compressie automatisch aan de extensie.
+    csv_files = sorted(glob.glob(os.path.join(CSV_DIR, f"{pair}_tick_UTC+0_00_*-Parse.csv*")))
 
     available_years = {}
     for f in csv_files:
