@@ -148,12 +148,14 @@ def download_month(market, symbol, start_date, finish_date, temp_file_path, freq
                 return False
     return False
 
+import gzip
+
 def merge_monthly_files(temp_files, final_csv_path):
-    """Voegt de maandbestanden samen tot één jaarbestand."""
+    """Voegt de maandbestanden samen tot één gecomprimeerd jaarbestand (.csv.gz)."""
     print(f"    Samenvoegen van {len(temp_files)} maandbestanden naar {os.path.basename(final_csv_path)}...", flush=True)
     t0 = time.time()
     
-    with open(final_csv_path, 'w', encoding='utf-8') as outfile:
+    with gzip.open(final_csv_path, 'wt', encoding='utf-8') as outfile:
         first_written = False
         for month_file in temp_files:
             if not os.path.exists(month_file):
@@ -167,7 +169,7 @@ def merge_monthly_files(temp_files, final_csv_path):
                     infile.readline() # Skip header
                     outfile.write(infile.read())
                     
-    print(f"    Samenvoeging voltooid in {time.time()-t0:.1f}s.", flush=True)
+    print(f"    Samenvoeging en compressie voltooid in {time.time()-t0:.1f}s.", flush=True)
 
 def process_symbol_year(market, symbol, year, freq, data_root):
     """Verwerkt een enkel symbool en jaar."""
@@ -175,7 +177,7 @@ def process_symbol_year(market, symbol, year, freq, data_root):
     os.makedirs(symbol_dir, exist_ok=True)
     
     suffix = "1m" if freq == "1m" else "tick_UTC+0_00"
-    final_csv_path = os.path.join(symbol_dir, f"{symbol}_{suffix}_{year}-Parse.csv" if freq == "tick" else f"{symbol}_{suffix}_{year}.csv")
+    final_csv_path = os.path.join(symbol_dir, f"{symbol}_{suffix}_{year}-Parse.csv.gz" if freq == "tick" else f"{symbol}_{suffix}_{year}.csv.gz")
     
     # Skip als het eindsplitsingsbestand al bestaat (voor eerdere jaren)
     if os.path.exists(final_csv_path) and year < datetime.now().year:

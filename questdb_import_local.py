@@ -54,7 +54,7 @@ def import_csv_to_questdb(filepath, year, table_name, pair):
     filename = os.path.basename(filepath)
     file_size_mb = os.path.getsize(filepath) / (1024 * 1024)
     
-    temp_csv_path = filepath + ".import_ready"
+    temp_csv_path = filepath.replace(".gz", "") + ".import_ready"
     
     print(f"\n{'='*60}")
     print(f"[Import] Voorbereiden: {filename} ({file_size_mb:,.1f} MB)")
@@ -181,7 +181,7 @@ def main():
     existing_years = get_existing_years(pair)
     print(f"\n[Stats] {pair} Jaren al in database: {sorted(existing_years) if existing_years else 'Geen'}")
     
-    csv_files = sorted(glob.glob(os.path.join(CSV_DIR, f"{pair}_tick_UTC+0_00_*-Parse.csv")))
+    csv_files = sorted(glob.glob(os.path.join(CSV_DIR, f"{pair}_tick_UTC+0_00_*-Parse.csv*")))
     
     available_years = {}
     for f in csv_files:

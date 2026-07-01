@@ -24,7 +24,8 @@ PIP_THRESHOLD_LARGE = 10.0  # pips
 PRICE_JUMP_THRESHOLD_PIPS = 30.0  # meldingsdrempel voor "grote" sprongen
 
 results = []
-files = sorted(glob.glob(os.path.join(CSV_DIR, "*.csv")))
+files = sorted(glob.glob(os.path.join(CSV_DIR, "*.csv*")))
+files = [f for f in files if f.endswith(".csv") or f.endswith(".csv.gz")]
 if not files:
     print(f"Geen CSV-bestanden gevonden in {CSV_DIR}")
     sys.exit(1)

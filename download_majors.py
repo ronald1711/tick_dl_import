@@ -123,12 +123,14 @@ def download_month(market, pair, year, month_num, start_date, finish_date, temp_
                 return False
     return False
 
+import gzip
+
 def merge_monthly_files(temp_files, final_csv_path):
-    """Merge temp month files into a single year file, skipping headers on subsequent files."""
+    """Merge temp month files into a single year compressed file (.csv.gz), skipping headers on subsequent files."""
     print(f"    Merging {len(temp_files)} monthly files into {os.path.basename(final_csv_path)}...", flush=True)
     t0 = time.time()
     
-    with open(final_csv_path, 'w', encoding='utf-8') as outfile:
+    with gzip.open(final_csv_path, 'wt', encoding='utf-8') as outfile:
         first_written = False
         for month_file in temp_files:
             if not os.path.exists(month_file):
@@ -144,14 +146,14 @@ def merge_monthly_files(temp_files, final_csv_path):
                     infile.readline()
                     outfile.write(infile.read())
                     
-    print(f"    Merged successfully in {time.time()-t0:.1f}s.", flush=True)
+    print(f"    Merged and compressed successfully in {time.time()-t0:.1f}s.", flush=True)
 
 def process_pair_year(market, pair, year):
     """Download and build the file for a single pair and year."""
     pair_dir = os.path.join(DATA_ROOT, pair)
     os.makedirs(pair_dir, exist_ok=True)
     
-    final_csv_path = os.path.join(pair_dir, f"{pair}_tick_UTC+0_00_{year}-Parse.csv")
+    final_csv_path = os.path.join(pair_dir, f"{pair}_tick_UTC+0_00_{year}-Parse.csv.gz")
     
     # Check if final merged file already exists
     if os.path.exists(final_csv_path):
