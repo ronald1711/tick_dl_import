@@ -1,13 +1,13 @@
 # USDCAD Tick Data Quality Assessment
 
-Beoordelingsdatum: 2026-06-28T09:44:05.052376
-Dataset: USDCAD tick data UTC+0, 2004-2019
-Bestanden geanalyseerd: 16
-Totale ticks in dataset: 241,028,786
+Beoordelingsdatum: 2026-07-01T09:14:00.235390
+Dataset: USDCAD tick data UTC+0, 2004-2026
+Bestanden geanalyseerd: 23
+Totale ticks in dataset: 389,065,050
 
 ## Observatie 1: Kolomnamen verwisseld (zelfde bevinding als andere majors)
 
-De CSV-headers zijn `UTC,AskPrice,BidPrice,AskVolume,BidVolume`, maar in de data is `AskPrice` consequent **kleiner** dan `BidPrice`. De eerste numerieke prijskolom gedraagt zich dus als **Bid**, de tweede als **Ask**. **Alle 16 jaren vertonen dezelfde 100% inversie.** Dit is consistent met EURUSD, USDJPY en GBPUSD — de bronprovider draagt de kolommen consistent om in de export.
+De CSV-headers zijn `UTC,AskPrice,BidPrice,AskVolume,BidVolume`, maar in de data is `AskPrice` consequent **kleiner** dan `BidPrice`. De eerste numerieke prijskolom gedraagt zich dus als **Bid**, de tweede als **Ask**. **Alle 23 jaren vertonen dezelfde 100% inversie.** Dit is consistent met EURUSD, USDJPY en GBPUSD — de bronprovider draagt de kolommen consistent om in de export.
 
 **Vervolganalyse is uitgevoerd met omgewisselde kolommen** (Bid = kolom 1, Ask = kolom 2).
 
@@ -35,6 +35,13 @@ USDCAD wordt in forex-conventie 4 decimalen gequoteerd (1 pip = 0.0001). De data
 | 2017 | 1000000 | Ja | Ja | 0.1 | 1.3854 | 34.9 | 12727 | 16.15 | 107 | 0 | 0 |
 | 2018 | 1000000 | Ja | Ja | 0.1 | 0.9803 | 21.0 | 723 | 49.35 | 35 | 0 | 0 |
 | 2019 | 1000000 | Ja | Ja | 0.1 | 1.2418 | 34.9 | 2493 | 20.75 | 34 | 0 | 0 |
+| 2020 | 1000000 | Ja | Ja | 0.1 | 1.0516 | 11.6 | 11 | 28.35 | 95 | 0 | 0 |
+| 2021 | 1000000 | Ja | Ja | 0.1 | 1.1315 | 25.6 | 408 | 16.65 | 270 | 0 | 0 |
+| 2022 | 1000000 | Ja | Ja | 0.4 | 1.3845 | 26.0 | 3616 | 10.1 | 220 | 0 | 0 |
+| 2023 | 1000000 | Ja | Ja | 0.4 | 1.7996 | 34.7 | 5696 | 19.45 | 387 | 0 | 0 |
+| 2024 | 1000000 | Ja | Ja | 0.1 | 1.2751 | 30.9 | 551 | 11.55 | 280 | 0 | 0 |
+| 2025 | 1000000 | Ja | Ja | 0.4 | 1.321 | 34.5 | 627 | 37.5 | 92 | 0 | 0 |
+| 2026 | 1000000 | Ja | Ja | 0.4 | 1.2626 | 20.2 | 93 | 8.95 | 110 | 0 | 0 |
 
 Noot: 'Aantal Spread>10pips' en 'Gaten >1min' zijn tellingen binnen de 1M-rij-steekproef.
 
@@ -48,13 +55,13 @@ Alle jaarbestanden zijn chronologisch gesorteerd op UTC-timestamp.
 
 ### 3. Spreads — samenvatting over alle jaren
 - Minimum spread overall: 0.1000 pips
-- Gemiddelde spread (gemiddeld van alle jaar-means): 1.9091 pips
+- Gemiddelde spread (gemiddeld van alle jaar-means): 1.7292 pips
 - Maximum spread overall: 35.0000 pips
 
 Moderne jaren (2014-2019) hebben typisch 0.1-0.5 pip ECN-grade spreads. Vroege jaren (2004-2007) hebben ~1-2 pip spreads, gebruikelijk voor institutional data uit die periode.
 
 ### 4. Tijdgaten — VERWACHT
-Totaal 16,231 gaten > 1 minuut in alle 1M-steekproeven samen. Dit zijn weekenden, feestdagen en nieuwjaarsperiodes — geen onverwachte gaten gedetecteerd.
+Totaal 17,685 gaten > 1 minuut in alle 1M-steekproeven samen. Dit zijn weekenden, feestdagen en nieuwjaarsperiodes — geen onverwachte gaten gedetecteerd.
 
 ### 5. Prijssprongen — AANDACHT VOOR EXTREME WAARDEN
 Maximum tick-to-tick sprong: 283.40 pips. Extreme waarden komen voor tijdens flash-crashes (2015 CHF-blackout, 2019 USDJPY flash) of openingsuren. Voor strategieën die hier niet tegen kunnen: filter ticks met `|mid_delta| > 50 pips`.
