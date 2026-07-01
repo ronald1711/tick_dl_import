@@ -70,6 +70,14 @@ def main():
         print(f"\n[Compress] Verwerken: {src_name} ({src_size_mb:.1f} MB)...")
         t0 = time.time()
         
+        if os.path.exists(dst):
+            print(f"   [Skip] Gecomprimeerd bestand {os.path.basename(dst)} bestaat al. Origineel wordt verwijderd.")
+            try:
+                os.remove(src)
+            except Exception as e:
+                print(f"   [Warning] Kon origineel bestand niet verwijderen: {e}")
+            continue
+            
         try:
             compress_file(src, dst)
             dst_size = os.path.getsize(dst)
