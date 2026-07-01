@@ -29,6 +29,7 @@ De tools zijn ontworpen om grote hoeveelheden tick-data (tot honderden miljoenen
 | [questdb_import.py](file:///c:/projecten/forexdata/questdb_import.py) | Formatteert de CSV-bestanden en importeert ze in QuestDB. |
 | [questdb_import_local.py](file:///c:/projecten/forexdata/questdb_import_local.py) | Geoptimaliseerd import-script voor uitvoering direct op de server (9x snellere datum-conversie). |
 | [download_local.py](file:///c:/projecten/forexdata/download_local.py) | Downloadt ticks of 1m bars voor willekeurige symbolen direct op de server. |
+| [compress_existing_data.py](file:///c:/projecten/forexdata/compress_existing_data.py) | Comprimeert bestaande CSV-bestanden naar .csv.gz om ~80% schijfruimte te besparen. |
 | [START_IMPORT.bat](file:///c:/projecten/forexdata/START_IMPORT.bat) | Batch-bestand om de import op te starten. |
 | [QUESTDB_IMPORT_README.md](file:///c:/projecten/forexdata/QUESTDB_IMPORT_README.md) | Gedetailleerde handleiding voor het opzetten en importeren naar QuestDB. |
 
@@ -84,6 +85,26 @@ Dit script importeert de geformatteerde CSV-bestanden direct in QuestDB vanaf de
 
 ---
 
+## 📦 Schijfruimte & Gzip-compressie (.csv.gz)
+
+Omdat de ruwe tick-bestanden erg groot zijn (tot meer dan 2 GB per jaar), ondersteunen alle scripts nu **natively `.csv.gz` compressie**. Pandas decomprimeert deze bestanden in-memory tijdens het inlezen, waardoor ze ca. **5x kleiner** zijn op schijf zonder verlies van prestaties.
+
+* **Bestaande data comprimeren**:
+  Als je al onbewerkte CSV-bestanden hebt gedownload, kun je ze comprimeren met:
+  ```bash
+  python compress_existing_data.py
+  ```
+  *Dit script converteert alle `.csv` bestanden naar `.csv.gz` en verwijdert de originele bestanden na succesvolle verificatie.*
+
+* **Nieuwe downloads**:
+  Zowel `download_majors.py` als `download_local.py` slaan de data vanaf nu direct op als `.csv.gz`.
+  
+* **Import & Kwaliteitscontrole**:
+  De scripts `questdb_import.py`, `questdb_import_local.py` en `assess_majors.py` herkennen automatisch zowel `.csv` als `.csv.gz` bestanden en verwerken ze transparant.
+
+---
+
 ## 🚀 Snel Aan de Slag
 
 Voor gedetailleerde instructies over het opzetten van QuestDB en het uitvoeren van de import-pipeline op Windows, raadpleeg de **[QuestDB Forex Tick Data Project Handleiding](file:///c:/projecten/forexdata/QUESTDB_IMPORT_README.md)**.
+
