@@ -96,6 +96,9 @@ Niet opgelost omdat QuestDB geen `DELETE` ondersteunt en de enige generieke work
 ### Live-feed overlap voor het lopende jaar
 De `ticks`-tabel wordt náást deze batch-import ook door een aparte, waarschijnlijk realtime data-feed gevuld (herkenbaar aan symbolen als `XAUUSD` en `EURGBP`, die niet in dit project voorkomen). Voor het lopende kalenderjaar (bv. 2026) bevat de tabel dus zowel de historische Dukascopy-ticks uit deze pipeline als losse, niet-gerelateerde live ticks voor dezelfde periode — reken bij analyses over het huidige jaar niet blind op de rijcount uit deze import-scripts.
 
+### AUDUSD 2026: ~3 miljoen extra gedupliceerde rijen
+`questdb_import_ilp_local.py` had een fail-open bug in `get_existing_years()`: als de per-jaar `SELECT count()`-check op timeout liep (kwam voor bij 2026, doordat die partitie door de live-feed-overlap hierboven al 70+ miljoen rijen bevat en dus trager is), werd dat jaar stilzwijgend als "nog niet geïmporteerd" behandeld. Bij een `AUDUSD`-run zonder `--all` (dus juist de veilige default-modus) leidde dit alsnog tot een gedeeltelijke herimport van 2026 voordat het op tijd werd afgebroken — ongeveer 3 miljoen extra AUDUSD-rijen voor 2026, bovenop de al bestaande live-feed-overlap. Gefixt door de timeout te verhogen (15s → 30s) en de foutafhandeling om te draaien: een query die niet binnen de timeout antwoordt, laat het jaar nu **overslaan** (fail-safe) in plaats van importeren (fail-open) — een gemiste import is met een expliciete jaaropgave te herstellen, een dubbele import niet (geen `DELETE`).
+
 ---
 
 ## 📁 Project Bestanden

@@ -26,7 +26,7 @@ MAX_RETRIES = 3
 BASE_URL = f"http://{QUESTDB_HOST}:{QUESTDB_PORT}"
 
 
-def questdb_sql(query, timeout=15):
+def questdb_sql(query, timeout=30):
     try:
         resp = requests.get(f"{BASE_URL}/exec", params={"query": query}, timeout=timeout)
         resp.raise_for_status()
@@ -38,15 +38,27 @@ def questdb_sql(query, timeout=15):
 
 def get_existing_years(pair, candidate_years):
     """Check per jaar (partition-pruned, snel) i.p.v. een dure full-table
-    DISTINCT year(ts) scan die op een tabel van miljarden rijen timeout geeft."""
+    DISTINCT year(ts) scan die op een tabel van miljarden rijen timeout geeft.
+
+    Bij een mislukte/timeoutende query behandelen we het jaar als "onzeker"
+    i.p.v. "afwezig": fail-safe richting overslaan voorkomt een dubbele
+    import (onherstelbaar, QuestDB heeft geen DELETE) ten koste van hooguit
+    een gemiste import (te verhelpen door het jaar expliciet op te geven)."""
     existing = set()
+    uncertain = set()
     for year in candidate_years:
         result = questdb_sql(
             f"SELECT count() FROM {QUESTDB_TABLE} WHERE symbol='{pair}' AND ts IN '{year}'"
         )
-        if result and "dataset" in result and result["dataset"] and result["dataset"][0][0] > 0:
+        if result is None or "dataset" not in result:
+            uncertain.add(year)
+        elif result["dataset"] and result["dataset"][0][0] > 0:
             existing.add(year)
-    return existing
+    if uncertain:
+        print(f"   [Warning] Kon niet verifiëren of jaren {sorted(uncertain)} al in de database "
+              f"staan (query-timeout) — deze worden uit voorzorg OVERGESLAGEN. Geef ze expliciet "
+              f"op als argument als je zeker weet dat ze nog geïmporteerd moeten worden.")
+    return existing | uncertain
 
 
 def import_csv_to_questdb(filepath, year, pair, sender):
