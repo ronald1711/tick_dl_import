@@ -17,6 +17,7 @@ import numpy as np
 import glob
 import os
 import sys
+import gzip
 from datetime import datetime
 
 DATA_ROOT = r"C:\projecten\forexdata"
@@ -107,12 +108,16 @@ def analyze_file(path: str, pair: str, pip: float) -> dict | None:
 def count_total_rows(pair_dir: str) -> dict[str, int]:
     """Tel exacte rij-aantallen per jaar met een snelle binaire buffer."""
     totals = {}
-    for f in sorted(glob.glob(os.path.join(pair_dir, "*.csv"))):
+    csv_files = sorted(glob.glob(os.path.join(pair_dir, "*.csv*")))
+    csv_files = [f for f in csv_files if f.endswith(".csv") or f.endswith(".csv.gz")]
+    for f in csv_files:
         year = os.path.basename(f).split("_")[-1].split("-")[0]
         n = 0
-        with open(f, "rb") as fh:
+        is_gz = f.endswith(".gz")
+        open_func = gzip.open if is_gz else open
+        with open_func(f, "rb") as fh:
             buf_size = 1024 * 1024
-            read_generator = fh.raw.read
+            read_generator = fh.read
             while True:
                 buf = read_generator(buf_size)
                 if not buf:
@@ -260,7 +265,8 @@ def process_pair(pair: str) -> None:
     if not os.path.isdir(pair_dir):
         print(f"[{pair}] geen directory gevonden, skip")
         return
-    files = sorted(glob.glob(os.path.join(pair_dir, "*.csv")))
+    files = sorted(glob.glob(os.path.join(pair_dir, "*.csv*")))
+    files = [f for f in files if f.endswith(".csv") or f.endswith(".csv.gz")]
     if not files:
         print(f"[{pair}] geen CSV-bestanden, skip")
         return
@@ -303,7 +309,7 @@ def main():
         todo = [p for p in args if p.upper() in pairs and os.path.isdir(os.path.join(DATA_ROOT, p.upper()))]
     else:
         todo = [p for p in pairs if os.path.isdir(os.path.join(DATA_ROOT, p))
-                and glob.glob(os.path.join(DATA_ROOT, p, "*.csv"))]
+                and (glob.glob(os.path.join(DATA_ROOT, p, "*.csv")) or glob.glob(os.path.join(DATA_ROOT, p, "*.csv.gz")))]
                 
     print(f"Te analyseren paren: {todo}")
 
