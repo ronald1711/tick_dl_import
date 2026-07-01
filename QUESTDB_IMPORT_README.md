@@ -79,6 +79,23 @@ Elk jaar bevat tussen de 100 miljoen en 300 miljoen rijen. Door dit per jaar te 
 ### 3. "UnicodeEncodeError" op Windows
 De scripts zijn geoptimaliseerd om zonder emojis te printen, waardoor ze probleemloos werken op standaard Windows CMD en PowerShell zonder dat je `PYTHONIOENCODING` hoeft aan te passen.
 
+### 4. Let op bij `--all`: geen dubbele-import-check
+`--all` importeert altijd *alle* lokaal beschikbare jaren, ongeacht wat al in de database staat (in tegenstelling tot de default modus, die ontbrekende jaren berekent). QuestDB heeft geen `DELETE`-ondersteuning (ook niet in nieuwere versies — dit is een bewuste architecturale keuze, geen ontbrekende feature) en `overwrite=false` voorkomt geen dubbele rijen, dus een jaar dat al (deels) geïmporteerd is opnieuw met `--all` draaien resulteert in duplicaten. Controleer met `questdb_diagnose.py` of losse `SELECT count() FROM ticks WHERE symbol='<PAIR>' AND ts IN '<jaar>'`-queries welke jaren al aanwezig zijn vóórdat je `--all` gebruikt.
+
+---
+
+## ⚠️ Bekende dataproblemen
+
+### USDCAD 2005: gedupliceerde rijen
+Door een test-import gevolgd door een `--all`-run zonder voorafgaande check staan de rijen voor **USDCAD, jaar 2005** dubbel in de `ticks`-tabel (elke tick exact 2x). Geverifieerd effect op 1-minuut OHLC-candles:
+* **Open/high/low/close: niet aangetast** (duplicaat heeft identieke prijzen, dus min/max/eerste/laatste waarde blijft gelijk).
+* **Volume en tick-count per candle: exact 2x te hoog** voor USDCAD 2005.
+
+Niet opgelost omdat QuestDB geen `DELETE` ondersteunt en de enige generieke workaround (hele tabel exporteren, dedupliceren, opnieuw aanmaken) een te groot risico/impact heeft t.o.v. dit geïsoleerde probleem (~0,15% van de tabel). Houd hier rekening mee bij volume- of tick-count-gebaseerde analyses (bv. VWAP, liquiditeitsanalyse) op USDCAD 2005.
+
+### Live-feed overlap voor het lopende jaar
+De `ticks`-tabel wordt náást deze batch-import ook door een aparte, waarschijnlijk realtime data-feed gevuld (herkenbaar aan symbolen als `XAUUSD` en `EURGBP`, die niet in dit project voorkomen). Voor het lopende kalenderjaar (bv. 2026) bevat de tabel dus zowel de historische Dukascopy-ticks uit deze pipeline als losse, niet-gerelateerde live ticks voor dezelfde periode — reken bij analyses over het huidige jaar niet blind op de rijcount uit deze import-scripts.
+
 ---
 
 ## 📁 Project Bestanden
@@ -87,6 +104,8 @@ De scripts zijn geoptimaliseerd om zonder emojis te printen, waardoor ze problee
 |---------|------|
 | `download_majors.py` | Downloadt ontbrekende 2020-2026 data van Dukascopy |
 | `questdb_diagnose.py` | Toont de huidige databasevulling en ontbrekende jaren |
-| `questdb_import.py` | Formatteert en importeert de data naar QuestDB |
+| `questdb_import.py` | Formatteert en importeert de data naar QuestDB (remote server) |
+| `questdb_import_local.py` | Zelfde als hierboven, maar voor lokaal draaien op de QuestDB-server (`127.0.0.1`, `/mnt/ssd/forexdata`) |
+| `questdb_import_ilp_local.py` | Lokale variant die QuestDB's ILP-protocol gebruikt i.p.v. `/imp` HTTP CSV-upload — ~60% sneller lokaal (geen tijdelijk CSV-bestand, geen dubbele schijf-I/O). Alleen zinvol op dezelfde machine als QuestDB. |
 | `QUESTDB_IMPORT_README.md` | Deze handleiding |
 | `data_quality_assessment.md` | Kwaliteitsrapport van de historische data (2004-2019) |

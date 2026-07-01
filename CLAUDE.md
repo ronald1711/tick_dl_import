@@ -29,6 +29,10 @@ The pipeline runs in stages, each a separate script:
    ```
    `questdb_import_local.py` has identical logic/CLI but points at `127.0.0.1` and `DATA_ROOT = /mnt/ssd/forexdata` instead of the remote server/Windows path — keep the two files in sync when changing import logic.
 
+   `questdb_import_ilp_local.py` is a faster local-only alternative: same CLI/pair logic, but streams each chunk directly to QuestDB via the ILP protocol (`questdb.ingress.Sender`, HTTP transport on port 9000) instead of writing a temp CSV and POSTing it to `/imp`. About 60% faster locally (~110k rows/s vs ~70k rows/s) since there's no temp-file round-trip and no server-side CSV reparsing — but it requires `pandas`, `pyarrow`, and the `questdb` client package, and only makes sense when the script runs on the same host as QuestDB (compression/HTTP overhead tradeoffs assume no real network in between). Its `get_existing_years()` checks per-year row counts (partition-pruned) instead of a full-table `DISTINCT year(ts)` scan, since the latter times out once the table passes ~1-2 billion rows.
+
+   **Known issue**: `--all` always reimports every locally available year regardless of what's already in QuestDB, and QuestDB has no `DELETE` support (in any edition) to clean up accidental duplicates afterward — the only fix is rebuilding the whole table via `CREATE TABLE ... AS SELECT DISTINCT`. Check `questdb_diagnose.py` or a per-year `SELECT count() FROM ticks WHERE symbol='<PAIR>' AND ts IN '<year>'` before running `--all` on a pair/year that might already be loaded. See `QUESTDB_IMPORT_README.md` for a documented instance of this (USDCAD 2005) and its impact (tick-count/volume aggregates 2x for that year; OHLC prices unaffected).
+
 `smoke_test_findatapy.py` and `smoke_compare.py` are one-off exploratory scripts used to characterize the Dukascopy `findatapy` output format against the existing historical CSV convention — not part of the regular pipeline.
 
 ## Critical Data Quirk: Ask/Bid Column Swap
