@@ -27,6 +27,8 @@ De tools zijn ontworpen om grote hoeveelheden tick-data (tot honderden miljoenen
 | [assess_usdjpy.py](file:///c:/projecten/forexdata/assess_usdjpy.py) | Specifiek kwaliteitscontrole-script voor USDJPY. |
 | [questdb_diagnose.py](file:///c:/projecten/forexdata/questdb_diagnose.py) | Controleert de status en data-aantallen in de QuestDB database. |
 | [questdb_import.py](file:///c:/projecten/forexdata/questdb_import.py) | Formatteert de CSV-bestanden en importeert ze in QuestDB. |
+| [questdb_import_local.py](file:///c:/projecten/forexdata/questdb_import_local.py) | Geoptimaliseerd import-script voor uitvoering direct op de server (9x snellere datum-conversie). |
+| [download_local.py](file:///c:/projecten/forexdata/download_local.py) | Downloadt ticks of 1m bars voor willekeurige symbolen direct op de server. |
 | [START_IMPORT.bat](file:///c:/projecten/forexdata/START_IMPORT.bat) | Batch-bestand om de import op te starten. |
 | [QUESTDB_IMPORT_README.md](file:///c:/projecten/forexdata/QUESTDB_IMPORT_README.md) | Gedetailleerde handleiding voor het opzetten en importeren naar QuestDB. |
 
@@ -47,6 +49,41 @@ Gedetailleerde kwaliteitsrapportages per valutapaar zijn hier te vinden:
 
 ---
 
+## 🖥️ Server Scripts (Linux / Local Execution)
+
+Voor uitvoering direct op de Linux server (bijvoorbeeld met data gemonteerd op `/mnt/ssd/forexdata`) zijn er twee specifieke scripts beschikbaar:
+
+### 1. download_local.py
+Dit script downloadt data van Dukascopy voor elk gewenst symbool (majors, minors, goud/zilver, indexen of commodities) en ondersteunt directe conversie naar 1-minuut bars.
+
+* **Ticks downloaden (standaard laatste 2 jaar)**:
+  ```bash
+  python download_local.py --symbols USDCAD,XAUUSD --freq tick
+  ```
+* **1-minuut bars downloaden (standaard laatste 5 jaar)**:
+  *Het script downloadt per maand tick-data, resamplet dit in-memory naar 1m bars en verwijdert de grote tick-bestanden automatisch om schijfruimte te besparen.*
+  ```bash
+  python download_local.py --symbols GBPUSD,EURUSD,BRENTUSD --freq 1m
+  ```
+* **Specifieke jaren / periodes opgeven**:
+  ```bash
+  python download_local.py --symbols EURUSD --freq 1m --start-year 2020 --end-year 2025
+  ```
+
+### 2. questdb_import_local.py
+Dit script importeert de geformatteerde CSV-bestanden direct in QuestDB vanaf de lokale server disk (`127.0.0.1:9000`). Het bevat een geoptimaliseerde methode voor datum-conversie waardoor het importeren **9x sneller** gaat dan voorheen.
+
+* **Importeren van ontbrekende jaren voor een paar**:
+  ```bash
+  python questdb_import_local.py GBPUSD
+  ```
+* **Importeren van alle jaren (overschrijf database check)**:
+  ```bash
+  python questdb_import_local.py GBPUSD --all
+  ```
+
+---
+
 ## 🚀 Snel Aan de Slag
 
-Voor gedetailleerde instructies over het opzetten van QuestDB en het uitvoeren van de import-pipeline, raadpleeg de **[QuestDB Forex Tick Data Project Handleiding](file:///c:/projecten/forexdata/QUESTDB_IMPORT_README.md)**.
+Voor gedetailleerde instructies over het opzetten van QuestDB en het uitvoeren van de import-pipeline op Windows, raadpleeg de **[QuestDB Forex Tick Data Project Handleiding](file:///c:/projecten/forexdata/QUESTDB_IMPORT_README.md)**.
